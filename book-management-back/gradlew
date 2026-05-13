@@ -1,0 +1,12 @@
+#!/bin/sh
+
+APP_HOME=$(cd "$(dirname "$0")" && pwd -P)
+CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+
+if [ ! -f "$CLASSPATH" ]; then
+  echo "Gradle Wrapper jar not found: $CLASSPATH" >&2
+  echo "Run './gradlew wrapper' from a machine with Gradle installed or restore gradle/wrapper/gradle-wrapper.jar." >&2
+  exit 1
+fi
+
+exec java -Xmx64m -Xms64m -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
