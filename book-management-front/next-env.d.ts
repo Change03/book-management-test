@@ -2,5 +2,5 @@
 /// <reference types="next/image-types/global" />
 /// <reference path="./.next/types/routes.d.ts" />
 
-// 이 파일은 Next.js가 자동으로 관리합니다.
-// 타입 참조 설정을 위해 유지합니다.
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

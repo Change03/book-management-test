@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  pre_build:
+    commands:
+      - echo "백엔드 빌드 시작"
+      - java -version
+  build:
+    commands:
+      - cd book-management-back
+      - chmod +x gradlew
+      - ./gradlew clean bootJar -x test
+      - cd ..
+  post_build:
+    commands:
+      - mkdir -p deploy-backend
+      - cp book-management-back/build/libs/book-management-back.jar deploy-backend/
+      - cp book-management-back/Procfile deploy-backend/
+      - if [ -d book-management-back/.ebextensions ]; then cp -r book-management-back/.ebextensions deploy-backend/; fi
+      - ls -la deploy-backend
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: deploy-backend
+  discard-paths: no

@@ -103,6 +103,108 @@ cd book-management-front && npm install && npm run dev
 NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
 
+## PDF 방식 AWS 배포
+
+PDF 기준 배포 흐름은 다음과 같습니다.
+
+```text
+GitHub main push
+→ AWS CodePipeline
+→ AWS CodeBuild
+→ AWS Elastic Beanstalk
+→ RDS MySQL 연동
+```
+
+이 프로젝트에는 PDF 방식에 맞춰 다음 배포 파일을 추가했습니다.
+
+```text
+book-management/
+├── buildspec-backend.yml
+├── buildspec-frontend.yml
+├── book-management-back/
+│   ├── Procfile
+│   ├── .ebextensions/env.config
+│   └── src/main/resources/application-prod.yml
+└── book-management-front/
+    ├── Procfile
+    ├── .ebextensions/nodecommand.config
+    └── .env.production.example
+```
+
+### 백엔드 Elastic Beanstalk 설정
+
+백엔드는 Elastic Beanstalk Java 환경에 배포합니다.
+
+| 항목 | 값 |
+| --- | --- |
+| 플랫폼 | Corretto 21 기반 Java |
+| 배포 산출물 | `book-management-back.jar` |
+| 실행 파일 | `book-management-back/Procfile` |
+| 실행 포트 | `5000` |
+| 운영 프로필 | `prod` |
+| 빌드 파일 | `buildspec-backend.yml` |
+
+백엔드 EB 환경 변수는 다음처럼 설정합니다.
+
+| 환경 변수 | 예시 값 |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `SERVER_PORT` | `5000` |
+| `SPRING_DATASOURCE_URL` | `jdbc:mysql://RDS주소:3306/bookdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8` |
+| `SPRING_DATASOURCE_USERNAME` | `admin` |
+| `SPRING_DATASOURCE_PASSWORD` | RDS 비밀번호 |
+| `ALLOWED_ORIGINS` | `http://프론트엔드_EB_주소` |
+
+### 프론트엔드 Elastic Beanstalk 설정
+
+프론트엔드는 Elastic Beanstalk Node.js 환경에 배포합니다.
+
+| 항목 | 값 |
+| --- | --- |
+| 플랫폼 | Node.js 20 |
+| 실행 명령 | `npm start` |
+| 실행 포트 | `8080` |
+| 빌드 파일 | `buildspec-frontend.yml` |
+
+프론트엔드 EB 환경 변수는 다음처럼 설정합니다.
+
+| 환경 변수 | 예시 값 |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | `http://백엔드_EB_주소` |
+| `PORT` | `8080` |
+| `NODE_ENV` | `production` |
+
+이 프로젝트의 `src/lib/api.ts`는 API 경로 앞에 `/api/books`를 직접 붙입니다. 따라서 `NEXT_PUBLIC_API_URL`에는 `/api`를 붙이지 않습니다.
+
+```env
+NEXT_PUBLIC_API_URL=http://백엔드_EB_주소
+```
+
+### CodePipeline 구성 순서
+
+1. GitHub에 `book-management` 폴더 기준으로 코드를 올립니다.
+2. RDS MySQL 데이터베이스를 생성합니다.
+3. 백엔드 Elastic Beanstalk 환경을 생성합니다.
+4. 프론트엔드 Elastic Beanstalk 환경을 생성합니다.
+5. CodeBuild 프로젝트를 2개 만듭니다.
+   - 백엔드 빌드: `buildspec-backend.yml`
+   - 프론트엔드 빌드: `buildspec-frontend.yml`
+6. CodePipeline을 생성합니다.
+   - Source: GitHub `main` 브랜치
+   - Build: 백엔드/프론트엔드 CodeBuild 실행
+   - Deploy: 각각의 Elastic Beanstalk 환경에 배포
+7. 프론트엔드 EB 주소를 확인한 뒤 백엔드 `ALLOWED_ORIGINS`에 등록합니다.
+8. 백엔드 EB 주소를 확인한 뒤 프론트엔드 `NEXT_PUBLIC_API_URL`에 등록합니다.
+9. 다시 파이프라인을 실행해 CORS와 API 주소 변경사항을 반영합니다.
+
+### AWS 보안 그룹 확인
+
+| 대상 | 허용 |
+| --- | --- |
+| 프론트엔드 EB | 외부 HTTP 접속 |
+| 백엔드 EB | 프론트엔드 EB 또는 프론트엔드 주소에서 접근 |
+| RDS MySQL | 백엔드 EB 보안 그룹에서 `3306` 접근 |
+
 ## H2 접속 정보
 
 | 항목 | 값 |
