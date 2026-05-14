@@ -4,33 +4,18 @@ phases:
   install:
     runtime-versions:
       nodejs: 20
+
   pre_build:
     commands:
       - echo "프론트엔드 의존성 설치"
-      - node -v
-      - npm -v
       - cd book-management-front
       - npm ci
-      - cd ..
+
   build:
     commands:
-      - cd book-management-front
       - npm run build
-      - cd ..
-  post_build:
-    commands:
-      - mkdir -p deploy-frontend
-      - cp -r book-management-front/.next deploy-frontend/
-      - cp book-management-front/package.json deploy-frontend/
-      - cp book-management-front/package-lock.json deploy-frontend/
-      - cp book-management-front/next.config.mjs deploy-frontend/
-      - cp book-management-front/Procfile deploy-frontend/
-      - if [ -d book-management-front/public ]; then cp -r book-management-front/public deploy-frontend/; fi
-      - if [ -d book-management-front/.ebextensions ]; then cp -r book-management-front/.ebextensions deploy-frontend/; fi
-      - ls -la deploy-frontend
 
 artifacts:
   files:
     - '**/*'
-  base-directory: deploy-frontend
-  discard-paths: no
+  base-directory: book-management-front
