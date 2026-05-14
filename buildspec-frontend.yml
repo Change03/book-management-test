@@ -7,14 +7,40 @@ phases:
 
   pre_build:
     commands:
+      - echo "Installing frontend dependencies"
+      - node -v
+      - npm -v
       - cd book-management-front
       - npm ci
+      - cd ..
 
   build:
     commands:
+      - echo "Building frontend"
+      - cd book-management-front
       - npm run build
-      - ls -la
+      - cd ..
+
+  post_build:
+    commands:
+      - echo "Preparing Elastic Beanstalk frontend artifact"
+      - rm -rf deploy-frontend
+      - mkdir -p deploy-frontend
+      - cp -r book-management-front/.next deploy-frontend/.next
+      - cp book-management-front/package.json deploy-frontend/package.json
+      - cp book-management-front/package-lock.json deploy-frontend/package-lock.json
+      - cp book-management-front/next.config.mjs deploy-frontend/next.config.mjs
+      - cp book-management-front/Procfile deploy-frontend/Procfile
+      - if [ -d book-management-front/public ]; then cp -r book-management-front/public deploy-frontend/public; fi
+      - if [ -d book-management-front/.ebextensions ]; then cp -r book-management-front/.ebextensions deploy-frontend/.ebextensions; fi
+      - test -f deploy-frontend/package.json
+      - test -f deploy-frontend/Procfile
+      - ls -la deploy-frontend
 
 artifacts:
+  base-directory: deploy-frontend
   files:
     - '**/*'
+    - '.next/**/*'
+    - '.ebextensions/**/*'
+  discard-paths: no
