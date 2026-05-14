@@ -35,11 +35,21 @@ phases:
       - if [ -d book-management-front/.ebextensions ]; then cp -r book-management-front/.ebextensions deploy-frontend/.ebextensions; fi
       - test -f deploy-frontend/package.json
       - test -f deploy-frontend/Procfile
+      - test -d deploy-frontend/.next
+      - echo "Artifact root contents"
       - ls -la deploy-frontend
+      - echo ".next contents"
+      - ls -la deploy-frontend/.next
+      - echo "Artifact file tree"
+      - find deploy-frontend -maxdepth 3 -print
 
 artifacts:
   base-directory: deploy-frontend
   files:
+    - 'package.json'
+    - 'package-lock.json'
+    - 'next.config.mjs'
+    - 'Procfile'
     - '**/*'
     - '.next/**/*'
     - '.ebextensions/**/*'
