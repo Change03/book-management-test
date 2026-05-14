@@ -34,14 +34,14 @@ phases:
       - if [ -d book-management-front/public ]; then cp -r book-management-front/public deploy-frontend/public; fi
       - if [ -d book-management-front/.ebextensions ]; then cp -r book-management-front/.ebextensions deploy-frontend/.ebextensions; fi
       - test -f deploy-frontend/package.json
+      - test -f deploy-frontend/package-lock.json
       - test -f deploy-frontend/Procfile
+      - test -f deploy-frontend/next.config.mjs
       - test -d deploy-frontend/.next
-      - echo "Artifact root contents"
       - ls -la deploy-frontend
-      - echo ".next contents"
       - ls -la deploy-frontend/.next
-      - echo "Artifact file tree"
-      - find deploy-frontend -maxdepth 3 -print
+      - find deploy-frontend -maxdepth 2 -type f | head -50
+      - du -sh deploy-frontend
 
 artifacts:
   base-directory: deploy-frontend
@@ -51,6 +51,8 @@ artifacts:
     - 'next.config.mjs'
     - 'Procfile'
     - '**/*'
+    - '.next/**'
     - '.next/**/*'
+    - '.ebextensions/**'
     - '.ebextensions/**/*'
   discard-paths: no
